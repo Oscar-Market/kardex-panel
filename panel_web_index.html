@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kardex Mercería · Panel</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f7fb;--card:#fff;--ink:#1a1d26;--mut:#6b7280;--line:#e5e7eb;--pri:#1e3a8a;--onpri:#fff;--ok:#15803d;--warn:#d97706;--bad:#ba1a1a;--flash:#dbeafe}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1420;--card:#1a2030;--ink:#e8eaf0;--mut:#9aa3b5;--line:#2f374a;--pri:#6b8cff;--onpri:#0b1020;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--flash:#1e2f5c}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1420;--card:#1a2030;--ink:#e8eaf0;--mut:#9aa3b5;--line:#2f374a;--pri:#6b8cff;--onpri:#0b1020;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--flash:#1e2f5c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+h1{font-size:19px;margin:0}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;background:var(--card);font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}.pill.ok .dot{background:var(--ok)}.pill.err .dot{background:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:20px}.stat span{color:var(--mut);font-size:12px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,button{font:inherit;color:inherit}
+input,select{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+input:focus,select:focus{outline:2px solid var(--pri)}
+button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;cursor:pointer}
+button.pri{background:var(--pri);border-color:var(--pri);color:var(--onpri);font-weight:600}
+button.link{border:0;background:none;color:var(--pri);padding:4px 6px}button.link.del{color:var(--bad)}
+#q{flex:1 1 220px}
+.tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:860px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;background:var(--card)}
+td.n,th.n{text-align:right}td.nm{white-space:normal;min-width:200px}
+tr.flash td{background:var(--flash)}tr{transition:background .4s}
+.est{padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.est.normal{color:var(--ok)}.est.bajo{color:var(--warn)}.est.critico{color:var(--bad)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:0;width:min(560px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg{padding:16px;display:grid;gap:10px}.dlg h2{margin:0;font-size:17px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:grid;gap:3px;font-size:12px;color:var(--mut)}label input,label select{color:var(--ink);font-size:14px}
+.acts{display:flex;justify-content:flex-end;gap:8px}.err{color:var(--bad);min-height:18px;font-size:13px}
+.login{max-width:360px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="vLogin" class="login" hidden>
+  <h1>Kardex Mercería · Panel</h1>
+  <p style="margin:0;color:var(--mut)">Entra con el usuario que creaste en Supabase.</p>
+  <label>Correo<input id="lEmail" type="email" autocomplete="username"></label>
+  <label>Clave<input id="lPass" type="password" autocomplete="current-password"></label>
+  <div class="err" id="lErr"></div>
+  <button class="pri" id="lBtn">Entrar</button>
+</div>
+
+<div id="vApp" class="wrap" hidden>
+  <div class="bar">
+    <h1>Kardex Mercería · Panel</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="st" class="pill"><span class="dot"></span><span id="stT">Conectando…</span></span>
+      <button id="bOut">Salir</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="sN">0</b><span>Productos</span></div>
+    <div class="stat"><b id="sV">0</b><span>Valor del inventario (a precio de compra)</span></div>
+    <div class="stat"><b id="sB">0</b><span>Con stock bajo o crítico</span></div>
+  </div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Buscar por nombre, código o ubicación">
+    <select id="fCat"><option value="">Todas las categorías</option></select>
+    <select id="fEst"><option value="">Todo el stock</option><option value="alerta">Bajo o crítico</option><option value="critico">Solo crítico</option></select>
+    <button class="pri" id="bNew">+ Nuevo producto</button>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Código</th><th>Nombre</th><th>Categoría</th><th class="n">Stock</th><th class="n">Mínimo</th><th class="n">P. compra</th><th class="n">P. venta</th><th>Ubicación</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+    <div id="empty" class="empty" hidden>No hay productos que coincidan.</div>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <div class="dlg">
+    <h2 id="dT">Producto</h2>
+    <div class="g2"><label>Código<input id="fCod"></label><label>Categoría<input id="fCa" list="dlCat"></label></div>
+    <label>Nombre<input id="fNom"></label>
+    <div class="g2"><label>Unidad<input id="fUni" list="dlUni"></label><label>Ubicación<input id="fUbi"></label></div>
+    <div class="g2"><label>Stock<input id="fStk" type="number" step="any" min="0"></label><label>Stock mínimo<input id="fMin" type="number" step="any" min="0"></label></div>
+    <div class="g2"><label>Precio de compra<input id="fPc" type="number" step="any" min="0"></label><label>Precio de venta<input id="fPv" type="number" step="any" min="0"></label></div>
+    <div class="err" id="dErr"></div>
+    <div class="acts"><button id="dCancel">Cancelar</button><button class="pri" id="dSave">Guardar</button></div>
+  </div>
+  <datalist id="dlCat"></datalist><datalist id="dlUni"></datalist>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ====== PEGA AQUÍ TUS DATOS DE SUPABASE (los mismos de la app) ====== */
+const SUPABASE_URL = 'PEGA_AQUI_LA_URL_DE_SUPABASE';
+const SUPABASE_KEY = 'PEGA_AQUI_LA_CLAVE_ANON';
+/* ==================================================================== */
+
+const MONEDA = 'S/ ';
+const CATS = ['Telas','Hilos','Botones','Cintas','Encajes','Cierres','Elásticos','Accesorios','Lanas'];
+const UNIS = ['Metros','Unidades','Rollos','Conos','Docenas','Paquetes','Cajas','Pares','Ovillos','Carretes','Madejas','Kilos'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const fmt = n => (Math.round(n * 100) / 100).toLocaleString('es-PE', {maximumFractionDigits: 2});
+const money = n => MONEDA + (Math.round(n * 100) / 100).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+if (SUPABASE_URL.includes('PEGA_AQUI')) {
+  document.body.innerHTML = '<p style="padding:24px">Falta configurar <b>SUPABASE_URL</b> y <b>SUPABASE_KEY</b> al inicio de este archivo.</p>';
+  throw new Error('Sin configurar');
+}
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const rows = new Map();
+const flash = new Set();
+let canal = null, editId = null;
+
+const estado = r => r.stock <= r.stock_minimo * 0.5 ? 'critico' : (r.stock <= r.stock_minimo ? 'bajo' : 'normal');
+const ESTT = {normal: 'Normal', bajo: 'Bajo', critico: 'Crítico'};
+
+function setStatus(cls, txt) { $('st').className = 'pill ' + cls; $('stT').textContent = txt; }
+
+function render() {
+  const q = $('q').value.trim().toLowerCase(), cat = $('fCat').value, fe = $('fEst').value;
+  const todas = [...rows.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const lista = todas.filter(r => {
+    const e = estado(r);
+    if (cat && r.categoria !== cat) return false;
+    if (fe === 'alerta' && e === 'normal') return false;
+    if (fe === 'critico' && e !== 'critico') return false;
+    return !q || [r.nombre, r.codigo, r.ubicacion].some(x => String(x || '').toLowerCase().includes(q));
+  });
+  $('tb').innerHTML = lista.map(r => {
+    const e = estado(r);
+    return `<tr data-id="${esc(r.id)}" class="${flash.has(r.id) ? 'flash' : ''}">
+      <td>${esc(r.codigo)}</td><td class="nm">${esc(r.nombre)}</td><td>${esc(r.categoria)}</td>
+      <td class="n"><b>${fmt(r.stock)}</b> ${esc(r.unidad)}</td><td class="n">${fmt(r.stock_minimo)}</td>
+      <td class="n">${money(r.precio_compra)}</td><td class="n">${money(r.precio_venta)}</td><td>${esc(r.ubicacion)}</td>
+      <td><span class="est ${e}">${ESTT[e]}</span></td>
+      <td><button class="link" data-a="e">Editar</button><button class="link del" data-a="d">Eliminar</button></td></tr>`;
+  }).join('');
+  $('empty').hidden = lista.length > 0;
+  $('sN').textContent = todas.length;
+  $('sV').textContent = money(todas.reduce((s, r) => s + r.stock * r.precio_compra, 0));
+  $('sB').textContent = todas.filter(r => estado(r) !== 'normal').length;
+  const cats = [...new Set([...CATS, ...todas.map(r => r.categoria)])].sort((a, b) => a.localeCompare(b, 'es'));
+  const cur = $('fCat').value;
+  $('fCat').innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c => `<option${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  $('dlCat').innerHTML = cats.map(c => `<option value="${esc(c)}">`).join('');
+  if (flash.size) setTimeout(() => { flash.clear(); render(); }, 1500);
+}
+
+async function cargar() {
+  const { data, error } = await sb.from('productos').select('*').eq('eliminado', false).order('nombre').limit(1000);
+  if (error) { setStatus('err', 'Error: ' + error.message); return; }
+  rows.clear(); data.forEach(r => rows.set(r.id, r)); render();
+}
+
+function suscribir() {
+  if (canal) sb.removeChannel(canal);
+  canal = sb.channel('productos-web')
+    .on('postgres_changes', {event: '*', schema: 'public', table: 'productos'}, p => {
+      if (p.eventType === 'DELETE') { rows.delete(p.old.id); }
+      else if (p.new.eliminado) { rows.delete(p.new.id); }
+      else { rows.set(p.new.id, p.new); flash.add(p.new.id); }
+      render();
+    })
+    .subscribe(s => {
+      if (s === 'SUBSCRIBED') setStatus('ok', 'En vivo');
+      else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') setStatus('err', 'Sin conexión en vivo');
+    });
+}
+
+async function entrar(session) {
+  $('vLogin').hidden = !!session; $('vApp').hidden = !session;
+  if (!session) { if (canal) { sb.removeChannel(canal); canal = null; } return; }
+  await cargar(); suscribir();
+}
+
+/* ---------- login ---------- */
+$('lBtn').onclick = async () => {
+  $('lErr').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({email: $('lEmail').value.trim(), password: $('lPass').value});
+  if (error) $('lErr').textContent = 'Correo o clave incorrectos';
+};
+$('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('lBtn').click(); });
+$('bOut').onclick = () => sb.auth.signOut();
+sb.auth.onAuthStateChange((ev, s) => { if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT' || ev === 'INITIAL_SESSION') entrar(s); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('vApp').hidden) cargar(); });
+
+/* ---------- filtros ---------- */
+['q', 'fCat', 'fEst'].forEach(id => $(id).addEventListener('input', render));
+
+/* ---------- editar / nuevo / eliminar ---------- */
+function abrir(r) {
+  editId = r ? r.id : null;
+  $('dT').textContent = r ? 'Editar producto' : 'Nuevo producto';
+  $('fCod').value = r ? r.codigo : ''; $('fNom').value = r ? r.nombre : ''; $('fCa').value = r ? r.categoria : 'Telas';
+  $('fUni').value = r ? r.unidad : 'Unidades'; $('fUbi').value = r ? r.ubicacion : '';
+  $('fStk').value = r ? r.stock : 0; $('fMin').value = r ? r.stock_minimo : 0;
+  $('fPc').value = r ? r.precio_compra : 0; $('fPv').value = r ? r.precio_venta : 0;
+  $('dlUni').innerHTML = [...new Set([...UNIS, ...(r ? [r.unidad] : [])])].map(u => `<option value="${esc(u)}">`).join('');
+  $('dErr').textContent = ''; $('dlg').showModal();
+}
+$('bNew').onclick = () => abrir(null);
+$('dCancel').onclick = () => $('dlg').close();
+$('tb').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const r = rows.get(b.closest('tr').dataset.id); if (!r) return;
+  if (b.dataset.a === 'e') return abrir(r);
+  if (!confirm('¿Eliminar "' + r.nombre + '" del inventario? También desaparecerá del teléfono.')) return;
+  const { error } = await sb.from('productos').update({eliminado: true}).eq('id', r.id);
+  if (error) return alert('No se pudo eliminar: ' + error.message);
+  rows.delete(r.id); render();
+});
+
+$('dSave').onclick = async () => {
+  const f = {
+    codigo: $('fCod').value.trim(), nombre: $('fNom').value.trim(), categoria: $('fCa').value.trim() || 'Telas',
+    unidad: $('fUni').value.trim() || 'Unidades', ubicacion: $('fUbi').value.trim(),
+    stock: num($('fStk').value), stock_minimo: num($('fMin').value), precio_compra: num($('fPc').value), precio_venta: num($('fPv').value)
+  };
+  if (!f.nombre) return $('dErr').textContent = 'Escribe el nombre del producto';
+  if (!f.codigo) return $('dErr').textContent = 'Escribe el código';
+  if ([...rows.values()].some(r => r.codigo === f.codigo && r.id !== editId)) return $('dErr').textContent = 'Ya existe un producto con ese código';
+  $('dSave').disabled = true;
+  const q = editId ? sb.from('productos').update(f).eq('id', editId)
+                   : sb.from('productos').insert({id: crypto.randomUUID(), ...f});
+  const { data, error } = await q.select().single();
+  $('dSave').disabled = false;
+  if (error) return $('dErr').textContent = 'No se pudo guardar: ' + error.message;
+  rows.set(data.id, data); render(); $('dlg').close();
+};
+</script>
+</body>
+</html>
